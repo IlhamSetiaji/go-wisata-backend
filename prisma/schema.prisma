@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int                  @id @default(autoincrement())
+  email              String               @unique
+  name               String?
+  password           String
+  phone              String?              @unique
+  avatar             String?              @default("https://i.pravatar.cc/300")
+  gender             EnumUserGender?
+  city               String?
+  address            String?              @db.Text
+  status             EnumUserStatus?      @default(ACTIVE)
+  emailVerifiedAt    DateTime?
+  rememberToken      String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  deletedAt          DateTime?
+  parentId           Int?
+  parent             User?                @relation("Parent", fields: [parentId], references: [id])
+  children           User[]               @relation("Parent")
+  UserRole           UserRole[]
+  EmailVerifyToken   EmailVerifyToken[]
+  PasswordResetToken PasswordResetToken[]
+
+  @@map("users")
+}
+
+model EmailVerifyToken {
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  expiredAt DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("email_verify_tokens")
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  expiredAt DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("password_reset_tokens")
+}
+
+model Role {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+  UserRole       UserRole[]
+  RolePermission RolePermission[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  role      Role      @relation(fields: [roleId], references: [id])
+  roleId    Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Permission {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+  RolePermission RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  role         Role       @relation(fields: [roleId], references: [id])
+  roleId       Int
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  permissionId Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Tour {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?   @db.Text
+  latitude    Float?
+  longitude   Float?
+  province    String?
+  city        String?
+  district    String?
+  subDistrict String?
+  address     String?   @db.Text
+  zipCode     String?
+  phone       String?   @unique
+  email       String?   @unique
+  website     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@map("tours")
+}
+
+enum EnumUserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum EnumUserGender {
+  MAN
+  WOMAN
+}

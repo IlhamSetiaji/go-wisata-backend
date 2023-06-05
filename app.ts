@@ -9,6 +9,9 @@ const port = process.env.APP_PORT;
 const host = process.env.APP_HOST;
 const name = process.env.APP_NAME;
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use("/", route);
 
 app.listen(port, () => {

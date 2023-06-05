@@ -62,15 +62,7 @@ const main = async () => {
             .createMany({
                 data: [
                     {
-                        userId: admin.id,
-                        roleId: role.id,
-                    },
-                    {
-                        userId: adminCity.id,
-                        roleId: role.id,
-                    },
-                    {
-                        userId: user.id,
+                        userId: role.id == 1 ? admin.id : role.id == 2 ? adminCity.id : user.id,
                         roleId: role.id,
                     },
                 ],

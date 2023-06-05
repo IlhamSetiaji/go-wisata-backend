@@ -1,14 +1,12 @@
 import { Router } from "express";
-import user from "./user";
 import UserController from "../controllers/UserController";
 import multer from "multer";
 const upload = multer({ dest: 'uploads/' });
+import { authMiddleware } from "../middlewares/AuthMiddleware";
 
 const router = Router();
 
+router.use(authMiddleware);
 router.get('/', UserController.getAllUsers);
-router.post('/login', upload.any(), UserController.login);
-
-router.use('/users', user);
 
 export default router;

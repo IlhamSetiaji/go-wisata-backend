@@ -50,6 +50,27 @@ class UserController {
         }
     };
 
+    sendResetPasswordLink = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const { email } = req.body;
+            const user = await this.userService.sendResetPasswordLink(email);
+            return ResponseFormatter.success(res, user, "Reset password link sent");
+        } catch (error: any) {
+            return ResponseFormatter.error(res, error.message);
+        }
+    };
+
+    resetPassword = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const { email, token } = req.query;
+            const { password } = req.body;
+            const user = await this.userService.resetPassword(email as string, token as string, password);
+            return ResponseFormatter.success(res, user, "Password reset successfully");
+        } catch (error: any) {
+            return ResponseFormatter.error(res, error.message);
+        }
+    };
+
     getAllUsers = async (req: Request, res: Response): Promise<any> => {
         try {
             const users = await this.userService.getAllUsers();

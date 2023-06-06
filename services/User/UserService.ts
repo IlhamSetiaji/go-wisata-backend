@@ -69,8 +69,8 @@ class UserService implements IUserService {
             from: "ilham.ahmadz18@gmail.com",
             to: user.email,
             subject: "Email Verification",
-            html: `<p>Click <a href="http://localhost:3000/verify-email?email=${user.email}&token=${token}">here</a> to verify your email</p>
-            <p>Or copy this link to your browser: http://localhost:3000/verify-email?email=${user.email}&token=${token}</p>`
+            html: `<p>Click <a href="http://localhost:3000/api/verify-email?email=${user.email}&token=${token}">here</a> to verify your email</p>
+            <p>Or copy this link to your browser: http://localhost:3000/api/verify-email?email=${user.email}&token=${token}</p>`
         };
         await transporter.sendMail(mailOptions);
         return true;

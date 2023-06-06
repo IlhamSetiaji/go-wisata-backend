@@ -10,6 +10,8 @@ const router = Router();
 router.get('/', UserController.getAllUsers);
 router.post('/login', upload.any(), UserController.login);
 router.post('/register', upload.any(), StoreUserValidation, UserController.register);
+router.get('/resend-email-verification', UserController.resendEmailVerification);
+router.get('/verify-email', UserController.verifyEmail);
 
 router.use('/users', user);
 

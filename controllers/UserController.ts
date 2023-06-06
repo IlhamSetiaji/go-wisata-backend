@@ -32,8 +32,8 @@ class UserController {
 
     verifyEmail = async (req: Request, res: Response): Promise<any> => {
         try {
-            const { email, token } = req.params;
-            const user = await this.userService.verifyEmail(email, token);
+            const { email, token } = req.query;
+            const user = await this.userService.verifyEmail(email as string, token as string);
             return ResponseFormatter.success(res, user);
         } catch (error: any) {
             return ResponseFormatter.error(res, error.message);
@@ -42,9 +42,9 @@ class UserController {
 
     resendEmailVerification = async (req: Request, res: Response): Promise<any> => {
         try {
-            const { email } = req.params;
-            const user = await this.userService.resendEmailVerification(email);
-            return ResponseFormatter.success(res, user);
+            const { email } = req.query;
+            const user = await this.userService.resendEmailVerification(email as string);
+            return ResponseFormatter.success(res, user, "Email verification sent");
         } catch (error: any) {
             return ResponseFormatter.error(res, error.message);
         }

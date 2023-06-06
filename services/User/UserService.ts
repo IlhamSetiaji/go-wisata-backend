@@ -69,8 +69,8 @@ class UserService implements IUserService {
             from: "ilham.ahmadz18@gmail.com",
             to: user.email,
             subject: "Email Verification",
-            html: `<p>Click <a href="http://localhost:3000/verify-email?email=${user.email}&token=${token}">here</a> to verify your email</p>
-            <p>Or copy this link to your browser: http://localhost:3000/verify-email?email=${user.email}&token=${token}</p>`
+            html: `<p>Click <a href="http://localhost:3000/api/verify-email?email=${user.email}&token=${token}">here</a> to verify your email</p>
+            <p>Or copy this link to your browser: http://localhost:3000/api/verify-email?email=${user.email}&token=${token}</p>`
         };
         await transporter.sendMail(mailOptions);
         return true;
@@ -86,6 +86,7 @@ class UserService implements IUserService {
             throw new Error("Token is invalid or expired");
         }
         await this.userRepository.verifyEmail(email);
+        await this.userRepository.removeVerificationToken(token);
         return user;
     }
 
@@ -98,6 +99,48 @@ class UserService implements IUserService {
         setTimeout(async () => {
             await this.sendEmailVerification(email, token);
         }, 1000);
+        return user;
+    }
+
+    generateResetPasswordToken = async (email: string): Promise<any> => {
+        const user = await this.userRepository.findByEmail(email);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const token = crypto.randomBytes(64).toString('hex');
+        await this.userRepository.insertResetPasswordToken(user.email, token);
+        return token;
+    }
+
+    sendResetPasswordLink = async (email: string): Promise<any> => {
+        const user = await this.userRepository.findByEmail(email);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const token = await this.generateResetPasswordToken(email);
+        const mailOptions = {
+            from: "ilham.ahmadz18@gmail.com",
+            to: user.email,
+            subject: "Reset Password",
+            html: `<p>Click <a href="http://localhost:3000/api/reset-password?email=${user.email}&token=${token}">here</a> to reset your password</p>
+            <p>Or copy this link to your browser: http://localhost:3000/api/reset-password?email=${user.email}&token=${token}</p>`
+        };
+        await transporter.sendMail(mailOptions);
+        return user;
+    }
+
+    resetPassword = async (email: string, token: string, password: string): Promise<any> => {
+        const user = await this.userRepository.findByEmail(email);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const passwordResetToken = await this.userRepository.checkResetPasswordToken(email, token);
+        if (!passwordResetToken) {
+            throw new Error("Token is invalid or expired");
+        }
+        password = await bcrypt.hash(password, 10);
+        await this.userRepository.resetPassword(email, password);
+        await this.userRepository.removeResetPasswordToken(token);
         return user;
     }
 }

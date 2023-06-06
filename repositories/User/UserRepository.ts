@@ -1,6 +1,6 @@
 import { RegisterUserRequest } from "../../requests/User/RegisterUserRequest";
 import IUserRepository from "./IUserRepository";
-import { EmailVerifyToken, PrismaClient, User } from "@prisma/client";
+import { EmailVerifyToken, PasswordResetToken, PrismaClient, User } from "@prisma/client";
 
 class UserRepository implements IUserRepository {
     private prisma: PrismaClient;
@@ -33,7 +33,7 @@ class UserRepository implements IUserRepository {
                 phone: payload.phone,
                 gender: payload.gender,
                 city: payload.city,
-                parentId: payload.parentId,
+                parentId: payload.parentId ? payload.parentId : null,
                 UserRole: {
                     create: {
                         roleId: 3,
@@ -42,7 +42,7 @@ class UserRepository implements IUserRepository {
             },
             include: {
                 UserRole: true,
-            }
+            },
         });
     };
 
@@ -50,7 +50,7 @@ class UserRepository implements IUserRepository {
         email: string,
         token: string
     ): Promise<EmailVerifyToken> => {
-        return await this.prisma.emailVerifyToken.findFirst({
+        return (await this.prisma.emailVerifyToken.findFirst({
             where: {
                 email: email,
                 token: token,
@@ -58,7 +58,7 @@ class UserRepository implements IUserRepository {
                     gte: new Date().toISOString(),
                 },
             },
-        }) as EmailVerifyToken;
+        })) as EmailVerifyToken;
     };
 
     insertVerificationToken = async (
@@ -83,6 +83,63 @@ class UserRepository implements IUserRepository {
             },
             data: {
                 emailVerifiedAt: new Date().toISOString(),
+            },
+        });
+    };
+
+    removeVerificationToken = async (token: string): Promise<EmailVerifyToken> => {
+        return await this.prisma.emailVerifyToken.delete({
+            where: {
+                token: token,
+            },
+        });
+    };
+
+    insertResetPasswordToken = async (
+        email: string,
+        token: string
+    ): Promise<PasswordResetToken> => {
+        return await this.prisma.passwordResetToken.create({
+            data: {
+                token: token,
+                email: email,
+                expiredAt: new Date(
+                    Date.now() + 24 * 60 * 60 * 1000
+                ).toISOString(),
+            },
+        });
+    };
+
+    checkResetPasswordToken = async (
+        email: string,
+        token: string
+    ): Promise<PasswordResetToken> => {
+        return (await this.prisma.passwordResetToken.findFirst({
+            where: {
+                email: email,
+                token: token,
+                expiredAt: {
+                    gte: new Date().toISOString(),
+                },
+            },
+        })) as PasswordResetToken;
+    };
+
+    resetPassword = async (email: string, password: string): Promise<User> => {
+        return await this.prisma.user.update({
+            where: {
+                email: email,
+            },
+            data: {
+                password: password,
+            },
+        });
+    }
+
+    removeResetPasswordToken = async (token: string): Promise<PasswordResetToken> => {
+        return await this.prisma.passwordResetToken.delete({
+            where: {
+                token: token,
             },
         });
     }

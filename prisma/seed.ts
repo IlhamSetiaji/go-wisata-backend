@@ -11,7 +11,7 @@ const main = async () => {
             password,
             phone: "123456785",
             name: "Admin",
-            gender: "MAN",
+            gender: "MALE",
             emailVerifiedAt: new Date().toISOString(),
         },
     });
@@ -24,7 +24,7 @@ const main = async () => {
             name: "Admin City",
             city: "Surabaya",
             parentId: 1,
-            gender: "MAN",
+            gender: "FEMALE",
             emailVerifiedAt: new Date().toISOString(),
         },
     });
@@ -36,7 +36,7 @@ const main = async () => {
             phone: "123456787",
             name: "User",
             parentId: 1,
-            gender: "WOMAN",
+            gender: "MALE",
             emailVerifiedAt: new Date().toISOString(),
         },
     });
@@ -62,7 +62,7 @@ const main = async () => {
             .createMany({
                 data: [
                     {
-                        userId: role.id == 1 ? admin.id : role.id == 2 ? adminCity.id : user.id,
+                        userId: role.id == 1 ? admin.id : (role.id == 2 ? adminCity.id : user.id),
                         roleId: role.id,
                     },
                 ],

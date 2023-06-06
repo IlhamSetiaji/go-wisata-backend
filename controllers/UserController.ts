@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import UserService from "../services/User/UserService";
 import ResponseFormatter from "../helpers/ResponseFormatter";
+import { RegisterUserRequest } from "../requests/User/RegisterUserRequest";
 
 class UserController {
     private userService: UserService;
@@ -21,8 +22,28 @@ class UserController {
 
     register = async (req: Request, res: Response): Promise<any> => {
         try {
-            const { email, password } = req.body;
-            const user = await this.userService.register(email, password);
+            const payload: RegisterUserRequest = req.body;
+            const user = await this.userService.register(payload);
+            return ResponseFormatter.success(res, user);
+        } catch (error: any) {
+            return ResponseFormatter.error(res, error.message);
+        }
+    };
+
+    verifyEmail = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const { email, token } = req.params;
+            const user = await this.userService.verifyEmail(email, token);
+            return ResponseFormatter.success(res, user);
+        } catch (error: any) {
+            return ResponseFormatter.error(res, error.message);
+        }
+    };
+
+    resendEmailVerification = async (req: Request, res: Response): Promise<any> => {
+        try {
+            const { email } = req.params;
+            const user = await this.userService.resendEmailVerification(email);
             return ResponseFormatter.success(res, user);
         } catch (error: any) {
             return ResponseFormatter.error(res, error.message);

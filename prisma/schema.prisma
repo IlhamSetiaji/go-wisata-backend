@@ -11,27 +11,25 @@ datasource db {
 }
 
 model User {
-  id                 Int                  @id @default(autoincrement())
-  email              String               @unique
-  name               String?
-  password           String
-  phone              String?              @unique
-  avatar             String?              @default("https://i.pravatar.cc/300")
-  gender             EnumUserGender?
-  city               String?
-  address            String?              @db.Text
-  status             EnumUserStatus?      @default(ACTIVE)
-  emailVerifiedAt    DateTime?
-  rememberToken      String?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  deletedAt          DateTime?
-  parentId           Int?
-  parent             User?                @relation("Parent", fields: [parentId], references: [id])
-  children           User[]               @relation("Parent")
-  UserRole           UserRole[]
-  EmailVerifyToken   EmailVerifyToken[]
-  PasswordResetToken PasswordResetToken[]
+  id              Int             @id @default(autoincrement())
+  email           String          @unique
+  name            String?
+  password        String
+  phone           String?         @unique
+  avatar          String?         @default("https://i.pravatar.cc/300")
+  gender          EnumUserGender?
+  city            String?
+  address         String?         @db.Text
+  status          EnumUserStatus? @default(ACTIVE)
+  emailVerifiedAt DateTime?
+  rememberToken   String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
+  parentId        Int?
+  parent          User?           @relation("Parent", fields: [parentId], references: [id])
+  children        User[]          @relation("Parent")
+  UserRole        UserRole[]
 
   @@map("users")
 }
@@ -39,8 +37,7 @@ model User {
 model EmailVerifyToken {
   id        Int       @id @default(autoincrement())
   token     String    @unique
-  userId    Int
-  user      User      @relation(fields: [userId], references: [id])
+  email     String    @unique
   expiredAt DateTime
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -50,10 +47,8 @@ model EmailVerifyToken {
 }
 
 model PasswordResetToken {
-  id        Int       @id @default(autoincrement())
   token     String    @unique
-  userId    Int
-  user      User      @relation(fields: [userId], references: [id])
+  email     String
   expiredAt DateTime
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -141,6 +136,6 @@ enum EnumUserStatus {
 }
 
 enum EnumUserGender {
-  MAN
-  WOMAN
+  MALE
+  FEMALE
 }

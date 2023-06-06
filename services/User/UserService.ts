@@ -1,7 +1,11 @@
 import IUserService from "./IUserService";
 import UserRepository from "../../repositories/User/UserRepository";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
+import crypto from "crypto";
+import transporter from "../../config/NodeMailer";
+import { RegisterUserRequest } from "../../requests/User/RegisterUserRequest";
+import { User } from "@prisma/client";
 
 class UserService implements IUserService {
     private userRepository: UserRepository;
@@ -23,7 +27,7 @@ class UserService implements IUserService {
         if (!isPasswordMatch) {
             throw new Error("Password is incorrect");
         }
-        const token = jwt.sign({ email: user.email }, 'secretStringForJWT', { expiresIn: '1h' });
+        const token = jwt.sign({ email: user.email }, 'secretStringForJWT', { expiresIn: '1d' });
         return {
             tokenType: "Bearer",
             token: token,
@@ -31,13 +35,70 @@ class UserService implements IUserService {
         };
     }
 
-    register = async (email: string, password: string): Promise<any> => {
-        const user = await this.userRepository.findByEmail(email);
+    register = async (payload: RegisterUserRequest): Promise<any> => {
+        const user = await this.userRepository.findByEmail(payload.email);
         if (user) {
             throw new Error("User already exists");
         }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        return await this.userRepository.create(email, hashedPassword);
+        payload.parentId = payload.parentId ? payload.parentId : 1;
+        payload.password = await bcrypt.hash(payload.password, 10);
+        const createdUser = await this.userRepository.create(payload);
+        const token = await this.generateVerificationToken(payload.email);
+        setTimeout(async () => {
+            await this.sendEmailVerification(payload.email, token);
+        }, 1000);
+        return createdUser;
+    }
+
+    generateVerificationToken = async (email: string): Promise<any> => {
+        const user = await this.userRepository.findByEmail(email);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const token = crypto.randomBytes(64).toString('hex');
+        await this.userRepository.insertVerificationToken(user.email, token);
+        return token;
+    }
+
+    sendEmailVerification = async (email: string, token: string): Promise<any> => {
+        const user = await this.userRepository.findByEmail(email);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const mailOptions = {
+            from: "ilham.ahmadz18@gmail.com",
+            to: user.email,
+            subject: "Email Verification",
+            html: `<p>Click <a href="http://localhost:3000/verify-email?email=${user.email}&token=${token}">here</a> to verify your email</p>
+            <p>Or copy this link to your browser: http://localhost:3000/verify-email?email=${user.email}&token=${token}</p>`
+        };
+        await transporter.sendMail(mailOptions);
+        return true;
+    }
+
+    verifyEmail = async (email: string, token: string): Promise<User> => {
+        const user = await this.userRepository.findByEmail(email);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const emailVerifyToken = await this.userRepository.checkEmailVerificationToken(email, token);
+        if (!emailVerifyToken) {
+            throw new Error("Token is invalid or expired");
+        }
+        await this.userRepository.verifyEmail(email);
+        return user;
+    }
+
+    resendEmailVerification = async (email: string): Promise<User> => {
+        const user = await this.userRepository.findByEmail(email);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const token = await this.generateVerificationToken(email);
+        setTimeout(async () => {
+            await this.sendEmailVerification(email, token);
+        }, 1000);
+        return user;
     }
 }
 
